@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { MIDIProvider, useMIDIInputs } from "@react-midi/hooks";
 import { useAudioStore } from "./store/audioStore";
-import * as Tone from "tone";
 import {
   ReactFlow,
   Background,
@@ -24,22 +23,30 @@ function MIDIApp() {
   const { addConnection, removeConnection, addNode, removeNode } =
     useAudioStore();
 
-  const synth = new Tone.Synth().toDestination();
-  const { input, inputs, selectInput, selectedInputId } = useMIDIInputs();
+  const { initializeAudio, setupMidi, cleanupAudio } = useAudioStore();
+  const { input, inputs } = useMIDIInputs();
 
-  // Setup MIDI input when available
-  if (input) {
-    input.onmidimessage = (message) => {
-      const [command, note] = message.data;
-      if (command === 144) {
-        // Note on
-        synth.triggerAttack(Tone.Frequency(note, "midi").toFrequency());
-      } else if (command === 128) {
-        // Note off
-        synth.triggerRelease();
+  // Initialize audio and setup MIDI
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await initializeAudio();
+        // Setup MIDI with either the current input or first available
+        const midiInput = input || (inputs[0] as globalThis.WebMidi.MIDIInput);
+        if (midiInput) {
+          setupMidi(midiInput);
+        }
+      } catch (error) {
+        console.error("Error initializing audio:", error);
       }
     };
-  }
+
+    init();
+
+    return () => {
+      cleanupAudio();
+    };
+  }, [initializeAudio, setupMidi, cleanupAudio, input, inputs]);
 
   // Add nodes to the flow
   useEffect(() => {
@@ -48,12 +55,12 @@ function MIDIApp() {
     addConnection({ source: "midi", target: "synth" });
 
     return () => {
-      synth.dispose();
+      cleanupAudio();
       removeNode("synth");
       removeNode("midi");
       removeConnection({ source: "midi", target: "synth" });
     };
-  }, [addConnection, addNode, removeConnection, removeNode, synth]);
+  }, [addConnection, addNode, removeConnection, removeNode, cleanupAudio]);
 
   const onConnect: OnConnect = useCallback(
     (connection) => setEdges((edges) => addEdge(connection, edges)),
