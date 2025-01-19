@@ -1,9 +1,11 @@
 import type { NodeTypes } from "@xyflow/react";
 
 import { PositionLoggerNode } from "./PositionLoggerNode";
-import { SynthNode } from "./instruments/SynthNode";
 import { AppNode } from "./types";
 import { MidiInputNode } from "./MidiInputNode";
+import { OmniOscillatorNode } from "./tone/source-nodes/OmniOscillatorNode";
+import { AmplitudeEnvelopeNode } from "./tone/component-nodes/AmplitudeEnvelope";
+import { ChannelNode } from "./tone/component-nodes/ChannelNode";
 
 export const initialNodes: AppNode[] = [
   {
@@ -14,31 +16,43 @@ export const initialNodes: AppNode[] = [
   },
   {
     id: "b",
-    type: "synth",
+    type: "OmniOscillator",
     position: { x: -100, y: 100 },
-    data: { label: "Sine Synth", options: { oscillator: { type: "fatsine" } } },
+    data: {
+      label: "omniOscillator",
+      config: {
+        frequency: 440,
+        type: "sine",
+      },
+    },
   },
   {
     id: "c",
-    type: "synth",
+    type: "AmplitudeEnvelope",
     position: { x: -300, y: 100 },
     data: {
-      label: "Square Synth",
-      options: { oscillator: { type: "square32" } },
+      label: "Amp Env",
+      config: {
+        attack: 0.1,
+        decay: 0.2,
+        sustain: 0.8,
+        release: 0.5,
+      },
     },
   },
-
   {
     id: "d",
-    type: "output",
+    type: "Channel",
     position: { x: -100, y: 200 },
-    data: { label: "Mixer" },
+    data: { label: "Output", config: {} },
   },
 ];
 
 export const nodeTypes = {
   "position-logger": PositionLoggerNode,
   "midi-input": MidiInputNode,
-  synth: SynthNode,
+  omniOscillator: OmniOscillatorNode,
+  AmplitudeEnvelope: AmplitudeEnvelopeNode,
+  Channel: ChannelNode,
   // Add any of your custom nodes here!
 } satisfies NodeTypes;
