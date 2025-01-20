@@ -1,4 +1,5 @@
 import { createWithEqualityFn } from "zustand/traditional";
+import { AudioEngine } from "./audioEngine";
 import { initialNodes } from "../nodes";
 import { initialEdges } from "../edges";
 
@@ -20,6 +21,7 @@ import * as Tone from "tone";
 export interface RFStore {
   nodes: AppNode[];
   edges: Edge[];
+  audioEngine: AudioEngine;
   getNode: (id: string) => AppNode;
   onNodesChange: OnNodesChange<AppNode>;
   onEdgesChange: OnEdgesChange;
@@ -35,10 +37,13 @@ export interface RFStore {
 }
 
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
+const audioEngine = new AudioEngine();
+
 export const useRFStore = createWithEqualityFn(
   devtools<RFStore>((set, get) => ({
     nodes: initialNodes,
     edges: initialEdges,
+    audioEngine,
 
     getNode: (id: string) => {
       const node = get().nodes.find((n) => n.id === id);
@@ -60,12 +65,6 @@ export const useRFStore = createWithEqualityFn(
       });
     },
 
-    onConnect: (connection) => {
-      console.log("Connect", connection);
-      set({
-        edges: addEdge(connection, get().edges),
-      });
-    },
     setNodes: (nodes) => {
       console.log("SetNodes", nodes);
       set({ nodes });
@@ -81,31 +80,22 @@ export const useRFStore = createWithEqualityFn(
       set({ edges: [edge, ...get().edges] });
     },
 
-    updateNodeData: <NodeType extends AppNode>(
-      id: string,
-      data: Partial<NodeType["data"]>
-    ) => {
-      set({
-        nodes: get().nodes.map((node) =>
-          node.id === id
-            ? ({ ...node, data: { ...node.data, ...data } } as NodeType)
-            : node
-        ),
-      });
-    },
-
     createNode<T extends ToneComponentKey>(type: T) {
       const id = nanoid(); // Unique ID for the node
 
-      // Dynamically fetch the Tone.js class
-      const ToneClass = Tone[type];
-      if (!ToneClass) throw new Error(`Unknown Tone component type: ${type}`);
+      // Create audio node through AudioEngine
+      const node = audioEngine.createNode(id, type);
 
-      // Infer default options and position
-      const data =
-        ((ToneClass.getDefaults?.() ?? {}) as ConstructorParameters<
-          (typeof Tone)[T]
-        >[0]) || {};
+      // Get default parameters from the created node
+      const data = Object.fromEntries(
+        Object.entries(node).filter(
+          ([, value]) =>
+            value instanceof Tone.Param ||
+            typeof value === "number" ||
+            typeof value === "string"
+        )
+      );
+
       const position = { x: 400, y: 0 }; // Default position
 
       // Update the store with the new node
@@ -115,13 +105,50 @@ export const useRFStore = createWithEqualityFn(
           {
             id,
             type,
-            data: { ...data, label: type }, // Include label for easier debugging
+            data: { ...data, label: type },
             position,
           },
         ] as AppNode[],
       });
 
       console.log(`Created node: ${type}`, { id, data, position });
+    },
+
+    updateNodeData: <NodeType extends AppNode>(
+      id: string,
+      data: Partial<NodeType["data"]>
+    ) => {
+      try {
+        // Update audio parameters through AudioEngine
+        audioEngine.updateNodeParams(id, data);
+
+        // Update store state
+        set({
+          nodes: get().nodes.map((node) =>
+            node.id === id
+              ? ({ ...node, data: { ...node.data, ...data } } as NodeType)
+              : node
+          ),
+        });
+      } catch (error) {
+        console.error(`Failed to update node ${id}:`, error);
+        throw error;
+      }
+    },
+
+    onConnect: (connection) => {
+      try {
+        // Create audio connection
+        audioEngine.connectNodes(connection.source, connection.target);
+
+        // Update store state
+        set({
+          edges: addEdge(connection, get().edges),
+        });
+      } catch (error) {
+        console.error("Failed to connect nodes:", error);
+        throw error;
+      }
     },
   }))
 );
