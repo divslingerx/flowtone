@@ -1,7 +1,9 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { type OmniOscillatorNode } from "../../types";
 import { useRFStore } from "../../../store/store";
+import { ParamKnob } from "~/components/ParamKnob";
 import { Knob } from "~/components/Knob";
+import { useCallback } from "react";
 
 export function OmniOscillatorNode({
   data,
@@ -15,51 +17,47 @@ export function OmniOscillatorNode({
     audioEngine?.triggerNote(id);
   };
 
+  const updateDetune = useCallback(
+    (v: number) => {
+      updateNodeData(id, { detune: Number(v) });
+      audioEngine?.updateNodeParams(id, { detune: Number(v) });
+    },
+    [data.frequency]
+  );
+
+  const updateFreq = useCallback(
+    (v: number) => {
+      updateNodeData(id, { detune: Number(v) });
+      audioEngine?.updateNodeParams(id, { frequency: Number(v) });
+    },
+    [data.frequency]
+  );
+
   return (
     // We add this class to use the same styles as React Flow's default nodes.
-    <div className="react-flow__node-default">
+    <div className="react-flow__node-default w-full">
       {data.label && (
         <div className="text-lg font-semibold mb-2">{data.label}</div>
       )}
       <button onClick={handleAttackRelease}>Test</button>
-      <label>
-        <span>Frequency</span>
-        <input
-          className="nodrag  max-w-[100px]"
-          type="range"
-          min="10"
-          max="1000"
-          value={data.frequency}
-          onChange={(e) => {
-            updateNodeData(id, { frequency: e.target.value });
-            audioEngine?.updateNodeParams(id, { frequency: e.target.value });
-          }}
+      <div className="grid grid-cols-2 justify-between gap-6">
+        <Knob
+          value={nodeData.frequency as number}
+          onChange={updateFreq}
+          label="Freq"
         />
-        <span>{nodeData.frequency}Hz</span>
-      </label>
 
-      <label>
-        <span>Detune</span>
-        <input
-          className="nodrag  max-w-[100px]"
-          type="range"
-          min="10"
-          max="1000"
-          value={nodeData.detune}
-          onChange={(e) => {
-            updateNodeData(id, { detune: Number(e.target.value) });
-            audioEngine?.updateNodeParams(id, {
-              detune: Number(e.target.value),
-            });
-          }}
+        <Knob
+          label="Detune"
+          value={nodeData.detune as number}
+          onChange={updateDetune}
         />
-        <span>{nodeData.detune}Centz</span>
-      </label>
-      <div className="flex">
+      </div>
+      <div className="flex mx-auto m-4 justify-center">
         <label>
-          <span>Waveform</span>
+          <span className="mr-2">Waveform</span>
           <select
-            className="nodrag"
+            className="nodrag bg-white/50 border border-gray-300 rounded-md shadow-sm px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-white/70 transition-colors"
             value={nodeData.type}
             onChange={(e) => {
               updateNodeData(id, { type: e.target.value });
