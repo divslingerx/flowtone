@@ -1,58 +1,99 @@
 import type { NodeTypes } from "@xyflow/react";
 
-import { PositionLoggerNode } from "./PositionLoggerNode";
 import { AppNode } from "./types";
 import { MidiInputNode } from "./MidiInputNode";
 import { OmniOscillatorNode } from "./tone/source-nodes/OmniOscillatorNode";
 import { AmplitudeEnvelopeNode } from "./tone/component-nodes/AmplitudeEnvelope";
 import { ChannelNode } from "./tone/component-nodes/ChannelNode";
+import { FilterNode } from "./tone/component-nodes/FilterNode";
+import { FrequencyEnvelopeNode } from "./tone/component-nodes/FilterEnvelope";
+
+import { AddComponentNode } from "./AddComponentNode";
+import { PannerNode } from "./tone/component-nodes/PannerNode";
 
 export const initialNodes: AppNode[] = [
   {
     id: "a",
-    type: "midi-input",
-    position: { x: -190, y: 0 },
-    data: { label: "Midi Input" },
+    type: "Midi",
+    position: { x: 600, y: -125 },
+    data: { label: "Midi Input", config: {} },
   },
   {
     id: "b",
     type: "OmniOscillator",
-    position: { x: -100, y: 100 },
+    position: { x: 600, y: 0 },
     data: {
-      label: "omniOscillator",
-      config: {
-        frequency: 440,
-        type: "sine",
-      },
+      label: "OmniOscillator",
+      detune: 0,
+      mute: false,
+      frequency: 440,
+      type: "sine",
     },
   },
   {
     id: "c",
     type: "AmplitudeEnvelope",
-    position: { x: -300, y: 100 },
+    position: { x: 600, y: 225 },
     data: {
-      label: "Amp Env",
-      config: {
-        attack: 0.1,
-        decay: 0.2,
-        sustain: 0.8,
-        release: 0.5,
-      },
+      label: "AmplitudeEnvelope",
+      attack: 0.1,
+      decay: 0.2,
+      sustain: 0.8,
+      release: 0.5,
     },
   },
   {
     id: "d",
+    type: "Filter",
+    position: { x: 600, y: 350 },
+    data: {
+      label: "Filter",
+      frequency: 440,
+      type: "lowpass",
+    },
+  },
+  {
+    id: "e",
+    type: "FrequencyEnvelope",
+    position: { x: 800, y: 225 },
+    data: {
+      label: "FrequencyEnvelope",
+      attack: 0.1,
+      decay: 0.2,
+      sustain: 0.8,
+      release: 0.5,
+    },
+  },
+  {
+    id: "f",
     type: "Channel",
-    position: { x: -100, y: 200 },
-    data: { label: "Output", config: {} },
+    position: { x: 600, y: 425 },
+    data: {
+      label: "Output",
+      mute: false,
+      solo: false,
+      pan: 0,
+      volume: 0.5,
+    },
+  },
+  {
+    id: "g",
+    type: "StoreNode",
+    position: { x: 800, y: -100 },
+    data: {},
   },
 ];
 
 export const nodeTypes = {
-  "position-logger": PositionLoggerNode,
-  "midi-input": MidiInputNode,
-  omniOscillator: OmniOscillatorNode,
+  // "position-logger": PositionLoggerNode,
+  Midi: MidiInputNode,
+  OmniOscillator: OmniOscillatorNode,
   AmplitudeEnvelope: AmplitudeEnvelopeNode,
+  Filter: FilterNode,
+  FrequencyEnvelope: FrequencyEnvelopeNode,
+  Panner: PannerNode,
   Channel: ChannelNode,
+
+  StoreNode: AddComponentNode,
   // Add any of your custom nodes here!
 } satisfies NodeTypes;

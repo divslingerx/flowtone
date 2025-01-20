@@ -1,96 +1,50 @@
-import { useCallback, useEffect } from "react";
-import { MIDIProvider, useMIDIInputs } from "@react-midi/hooks";
-import { useAudioStore } from "./store/audioStore";
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-  addEdge,
-  useNodesState,
-  useEdgesState,
-  type OnConnect,
-} from "@xyflow/react";
-
+import { ReactFlow, Background, Controls, MiniMap } from "@xyflow/react";
+import { shallow } from "zustand/shallow";
+import { useRFStore, RFStore } from "./store/store";
 import "@xyflow/react/dist/style.css";
 
-import { initialNodes, nodeTypes } from "./nodes";
-import { initialEdges, edgeTypes } from "./edges";
+import { nodeTypes } from "./nodes";
+import { edgeTypes } from "./edges";
+import * as Tone from "tone";
 
-function MIDIApp() {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const { addConnection, removeConnection, addNode, removeNode } =
-    useAudioStore();
+const selector = (store: RFStore) => ({
+  nodes: store.nodes,
+  edges: store.edges,
+  onNodesChange: store.onNodesChange,
+  onEdgesChange: store.onEdgesChange,
+  addEdge: store.addEdge,
+});
 
-  const { initializeAudio, setupMidi, cleanupAudio } = useAudioStore();
-  const { input, inputs } = useMIDIInputs();
-
-  // Initialize audio and setup MIDI
-  useEffect(() => {
-    const init = async () => {
-      try {
-        await initializeAudio();
-        // Setup MIDI with either the current input or first available
-        const midiInput = input || (inputs[0] as globalThis.WebMidi.MIDIInput);
-        if (midiInput) {
-          setupMidi(midiInput);
-        }
-      } catch (error) {
-        console.error("Error initializing audio:", error);
-      }
-    };
-
-    init();
-
-    return () => {
-      cleanupAudio();
-    };
-  }, [initializeAudio, setupMidi, cleanupAudio, input, inputs]);
-
-  // Add nodes to the flow
-  useEffect(() => {
-    addNode({ id: "synth", type: "synth" });
-    addNode({ id: "midi", type: "midi" });
-    addConnection({ source: "midi", target: "synth" });
-
-    return () => {
-      cleanupAudio();
-      removeNode("synth");
-      removeNode("midi");
-      removeConnection({ source: "midi", target: "synth" });
-    };
-  }, [addConnection, addNode, removeConnection, removeNode, cleanupAudio]);
-
-  const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((edges) => addEdge(connection, edges)),
-    [setEdges]
+export default function App() {
+  const { addEdge, nodes, edges, onEdgesChange, onNodesChange } = useRFStore(
+    selector,
+    shallow
   );
+
+  const toggleAudio = () => {
+    if (Tone.getContext().state === "suspended") {
+      Tone.getContext().resume();
+    } else {
+      Tone.getContext().rawContext.suspend(0);
+    }
+  };
 
   return (
     <ReactFlow
+      onClick={toggleAudio}
       nodes={nodes}
-      nodeTypes={nodeTypes}
-      onNodesChange={onNodesChange}
       edges={edges}
-      edgeTypes={edgeTypes}
+      onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
+      onConnect={addEdge}
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       fitView
+      maxZoom={1.5}
     >
       <Background />
       <MiniMap />
       <Controls />
     </ReactFlow>
-  );
-}
-
-export default function App() {
-  return (
-    <MIDIProvider>
-      <div className="w-full h-screen">
-        <MIDIApp />
-      </div>
-    </MIDIProvider>
   );
 }
