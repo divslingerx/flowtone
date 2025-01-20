@@ -1,12 +1,34 @@
 import type { Node } from "@xyflow/react";
+export type { Node };
 import * as Tone from "tone";
 
+export interface AppEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+}
+
 export type MidiInputNode = Node<
-  { label: string; config: Record<string, unknown> },
+  {
+    label: string;
+    config: Record<string, unknown>;
+    connections?: AppEdge[];
+  },
   "Midi"
 >;
 
 export type StoreNode = Node<Record<string, unknown>, "StoreNode">;
+
+export type MidiPianoNode = Node<
+  {
+    label: string;
+    config: Record<string, unknown>;
+    connections?: AppEdge[];
+  },
+  "MidiPiano"
+>;
 
 /* 
 ExtractClassesReturningType is a generic utility type that extracts class names from an object (T) based on certain conditions:
@@ -221,4 +243,5 @@ export type AppNode =
   | VolumeNode
   | WaveformNode
   | MidiInputNode
-  | StoreNode;
+  | StoreNode
+  | MidiPianoNode;

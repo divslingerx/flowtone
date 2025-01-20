@@ -2,6 +2,7 @@ import type { NodeTypes } from "@xyflow/react";
 
 import { AppNode } from "./types";
 import { MidiInputNode } from "./MidiInputNode";
+import { MidiPianoNode } from "./MidiPianoNode";
 import { OmniOscillatorNode } from "./tone/source-nodes/OmniOscillatorNode";
 import { AmplitudeEnvelopeNode } from "./tone/component-nodes/AmplitudeEnvelope";
 import { ChannelNode } from "./tone/component-nodes/ChannelNode";
@@ -12,6 +13,12 @@ import { AddComponentNode } from "./AddComponentNode";
 import { PannerNode } from "./tone/component-nodes/PannerNode";
 
 export const initialNodes: AppNode[] = [
+  {
+    id: "p",
+    type: "MidiPiano",
+    position: { x: 400, y: -400 },
+    data: { label: "Piano Midi Player", config: {} },
+  },
   {
     id: "a",
     type: "Midi",
@@ -87,6 +94,7 @@ export const initialNodes: AppNode[] = [
 export const nodeTypes = {
   // "position-logger": PositionLoggerNode,
   Midi: MidiInputNode,
+  MidiPiano: MidiPianoNode,
   OmniOscillator: OmniOscillatorNode,
   AmplitudeEnvelope: AmplitudeEnvelopeNode,
   Filter: FilterNode,
