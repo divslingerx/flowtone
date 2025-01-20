@@ -1,6 +1,6 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 
-import { type SynthNode } from "../types";
+import { type SynthNode } from "~/nodes/types";
 
 export function SynthNode({ data }: NodeProps<SynthNode>) {
   return (
