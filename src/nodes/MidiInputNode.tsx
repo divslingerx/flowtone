@@ -1,10 +1,45 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { type MidiInputNode } from "./types";
 import { useMIDINote, useMIDIInputs } from "@react-midi/hooks";
+import { useContext, useEffect } from "react";
+import { AudioEngineContext } from "../store/audioContext";
 
-export function MidiInputNode({ data }: NodeProps<MidiInputNode>) {
+interface AppEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+}
+
+interface MidiInputNodeData extends MidiInputNode {
+  connections?: AppEdge[];
+}
+
+export function MidiInputNode({ data }: NodeProps<MidiInputNodeData>) {
   const midiNote = useMIDINote();
   const devices = useMIDIInputs();
+  const audioEngine = useContext(AudioEngineContext);
+
+  useEffect(() => {
+    if (midiNote && audioEngine) {
+      // Get connected nodes from edges
+      const connectedNodes =
+        data.connections?.map((edge: AppEdge) => edge.target) || [];
+
+      // Send MIDI note to all connected nodes
+      connectedNodes.forEach((nodeId: string) => {
+        try {
+          audioEngine.handleMIDINote(nodeId, {
+            note: midiNote.note,
+            velocity: midiNote.velocity,
+          });
+        } catch (error) {
+          console.error("Error handling MIDI note:", error);
+        }
+      });
+    }
+  }, [midiNote, audioEngine, data.connections]);
 
   return (
     // We add this class to use the same styles as React Flow's default nodes.
