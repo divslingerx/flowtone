@@ -1,31 +1,18 @@
-import { useRef, useEffect } from "react";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import * as Tone from "tone";
 import { type OmniOscillatorNode } from "../../types";
-
-type AnyOscillator =
-  | Tone.Oscillator
-  | Tone.PWMOscillator
-  | Tone.PulseOscillator
-  | Tone.FatOscillator
-  | Tone.AMOscillator
-  | Tone.FMOscillator;
+import { useRFStore } from "../../../store/store";
 
 export function OmniOscillatorNode({
   data,
   id,
 }: NodeProps<OmniOscillatorNode>) {
-  const omniOsc = useRef<Tone.OmniOscillator<AnyOscillator> | null>(null);
-
   const { updateNodeData, getNode } = useReactFlow();
   const nodeData = (getNode(id) as OmniOscillatorNode)["data"];
+  const audioEngine = useRFStore((state) => state.audioEngine);
 
-  useEffect(() => {
-    omniOsc.current = new Tone.OmniOscillator();
-  }, []);
-
-  const handleAttackRelease = () =>
-    omniOsc.current?.start(0).stop("+1.25").toDestination();
+  const handleAttackRelease = () => {
+    audioEngine?.triggerNote(id);
+  };
 
   return (
     // We add this class to use the same styles as React Flow's default nodes.
@@ -42,7 +29,10 @@ export function OmniOscillatorNode({
           min="10"
           max="1000"
           value={data.frequency}
-          onChange={(e) => updateNodeData(id, { frequency: e.target.value })}
+          onChange={(e) => {
+            updateNodeData(id, { frequency: e.target.value });
+            audioEngine?.updateNodeParams(id, { frequency: e.target.value });
+          }}
         />
         <span>{nodeData.frequency}Hz</span>
       </label>
@@ -55,9 +45,12 @@ export function OmniOscillatorNode({
           min="10"
           max="1000"
           value={nodeData.detune}
-          onChange={(e) =>
-            updateNodeData(id, { detune: Number(e.target.value) })
-          }
+          onChange={(e) => {
+            updateNodeData(id, { detune: Number(e.target.value) });
+            audioEngine?.updateNodeParams(id, {
+              detune: Number(e.target.value),
+            });
+          }}
         />
         <span>{nodeData.detune}Centz</span>
       </label>
@@ -67,14 +60,10 @@ export function OmniOscillatorNode({
           <select
             className="nodrag"
             value={nodeData.type}
-            onChange={(e) =>
-              updateNodeData(id, {
-                oscillator: {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  type: e.target.value as any,
-                },
-              })
-            }
+            onChange={(e) => {
+              updateNodeData(id, { type: e.target.value });
+              audioEngine?.updateNodeParams(id, { type: e.target.value });
+            }}
           >
             <option value="sine">sine</option>
             <option value="triangle">triangle</option>
