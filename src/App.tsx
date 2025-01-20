@@ -43,7 +43,7 @@ export default function App() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        maxZoom={1}
+        maxZoom={1.5}
       >
         <Background />
         <MiniMap />
