@@ -1,6 +1,7 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { type OmniOscillatorNode } from "../../types";
 import { useRFStore } from "../../../store/store";
+import { Knob } from "~/components/Knob";
 
 export function OmniOscillatorNode({
   data,
