@@ -1,8 +1,7 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { type OmniOscillatorNode } from "../../types";
 import { useRFStore } from "../../../store/store";
-import { ParamKnob } from "~/components/ParamKnob";
-import { Knob } from "~/components/Knob";
+import { KnobFrequency } from "~/components/knob/knob-frequency";
 import { useCallback } from "react";
 
 export function OmniOscillatorNode({
@@ -40,18 +39,10 @@ export function OmniOscillatorNode({
         <div className="text-lg font-semibold mb-2">{data.label}</div>
       )}
       <button onClick={handleAttackRelease}>Test</button>
-      <div className="grid grid-cols-2 justify-between gap-6">
-        <Knob
-          value={nodeData.frequency as number}
-          onChange={updateFreq}
-          label="Freq"
-        />
+      <div className="grid grid-cols-2 justify-between gap-6 nodrag">
+        <KnobFrequency label="Freq" theme="green" />
 
-        <Knob
-          label="Detune"
-          value={nodeData.detune as number}
-          onChange={updateDetune}
-        />
+        <KnobFrequency label="Detune" theme="stone" />
       </div>
       <div className="flex mx-auto m-4 justify-center">
         <label>
