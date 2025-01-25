@@ -60,10 +60,11 @@ export type ToneComponentKey = ExtractClassesReturningType<
 
 type ToneComponent<
   T extends ToneComponentKey,
-  P = ConstructorParameters<(typeof Tone)[T]>[0],
+  P = ConstructorParameters<(typeof Tone)[T]>[0]
 > = Node<
-  P & {
+  {
     label: string;
+    config: P;
   },
   T
 >;

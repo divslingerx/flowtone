@@ -31,10 +31,12 @@ export const initialNodes: AppNode[] = [
     position: { x: 600, y: 0 },
     data: {
       label: "OmniOscillator",
-      detune: 0,
-      mute: false,
-      frequency: 440,
-      type: "sine",
+      config: {
+        detune: 0,
+        mute: false,
+        frequency: 440,
+        type: "sine",
+      },
     },
   },
   {
@@ -43,10 +45,12 @@ export const initialNodes: AppNode[] = [
     position: { x: 600, y: 225 },
     data: {
       label: "AmplitudeEnvelope",
-      attack: 0.1,
-      decay: 0.2,
-      sustain: 0.8,
-      release: 0.5,
+      config: {
+        attack: 0.1,
+        decay: 0.2,
+        sustain: 0.8,
+        release: 0.5,
+      },
     },
   },
   {
@@ -55,8 +59,10 @@ export const initialNodes: AppNode[] = [
     position: { x: 600, y: 350 },
     data: {
       label: "Filter",
-      frequency: 440,
-      type: "lowpass",
+      config: {
+        frequency: 440,
+        type: "lowpass",
+      },
     },
   },
   {
@@ -65,10 +71,12 @@ export const initialNodes: AppNode[] = [
     position: { x: 800, y: 225 },
     data: {
       label: "FrequencyEnvelope",
-      attack: 0.1,
-      decay: 0.2,
-      sustain: 0.8,
-      release: 0.5,
+      config: {
+        attack: 0.1,
+        decay: 0.2,
+        sustain: 0.8,
+        release: 0.5,
+      },
     },
   },
   {
@@ -77,10 +85,12 @@ export const initialNodes: AppNode[] = [
     position: { x: 600, y: 425 },
     data: {
       label: "Output",
-      mute: false,
-      solo: false,
-      pan: 0,
-      volume: 0.5,
+      config: {
+        mute: false,
+        solo: false,
+        pan: 0,
+        volume: 0.5,
+      },
     },
   },
   {
