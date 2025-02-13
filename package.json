@@ -14,7 +14,7 @@
     "@react-midi/hooks": "^2.0.1",
     "@reduxjs/toolkit": "^2.5.0",
     "@tailwindcss/forms": "^0.5.10",
-    "@xyflow/react": "^12.3.6",
+    "@xyflow/react": "^12.4.3",
     "add": "^2.0.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
