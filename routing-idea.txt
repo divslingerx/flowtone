@@ -1,0 +1,273 @@
+1. Separate the problem into 3 layers (this is key)
+
+Even though the UI looks like “modules connected by wires,” the engine usually has three distinct layers:
+
+① UI graph (React Flow)
+
+Nodes = modules (synth, effect, mixer, sequencer)
+
+Edges = cables (audio, MIDI, CV)
+
+Knobs = parameters
+
+This layer does not produce sound.
+It only describes connections and parameter changes.
+
+② Routing graph (engine abstraction)
+
+This is your own internal model that:
+
+Knows which module outputs connect to which inputs
+
+Knows signal types (audio vs MIDI vs CV)
+
+Can rebuild routing when cables change
+
+Think of this as:
+
+ModuleInstance {
+  id
+  type
+  inputs: InputPort[]
+  outputs: OutputPort[]
+  toneNode?: Tone.AudioNode | Tone.Instrument
+}
+
+③ Audio engine (Tone.js)
+
+This layer actually:
+
+Generates audio
+
+Schedules MIDI
+
+Mixes channels
+
+Sends output to speakers or export
+
+Tone.js already has a graph system — you’re mapping your graph to theirs.
+
+2. How “tracks” usually work (even in modular UIs)
+
+Even in Reason (which looks trackless), tracks still exist.
+
+A Track is usually:
+
+One MIDI source + one instrument + one mixer channel
+
+Visually hidden, but structurally present.
+
+Typical structure:
+[MIDI Clip / Sequencer]
+        ↓
+    [Instrument]
+        ↓
+     [Track Channel]
+        ↓
+     [Master Bus]
+
+
+Even if users can reroute cables manually, this is the default backbone.
+
+3. Recommended core objects (very important)
+A. Modules (nodes)
+
+Each module has:
+
+Signal type in/out
+
+Tone.js node(s)
+
+No knowledge of tracks
+
+Example module types:
+
+MidiSequencer
+
+Synth
+
+Sampler
+
+Effect
+
+MixerChannel
+
+AudioOutput
+
+B. Ports (typed connections)
+
+Every connection must declare what it carries:
+
+type PortType = "midi" | "audio" | "cv"
+
+
+Rules:
+
+MIDI → Instrument only
+
+Audio → Effects / Mixers
+
+CV → Params (filter cutoff, etc.)
+
+This avoids chaos.
+
+4. MIDI routing (how pros do it)
+MIDI is event-based, not audio
+
+Tone.js instruments don’t accept “MIDI cables” — they accept note events.
+
+So the pattern is:
+
+① MIDI source emits events
+onNote(note, time, velocity)
+
+② Engine forwards events to connected instruments
+instrument.triggerAttackRelease(note, duration, time, velocity)
+
+③ One MIDI source → many instruments (optional)
+
+This lets you do:
+
+One sequencer controlling multiple synths
+
+Keyboard → whichever module is armed
+
+💡 Important: MIDI connections are not Tone.js connections — they’re your own event routing system.
+
+5. Audio routing (Tone.js handles this beautifully)
+
+Audio is continuous, so this part maps nicely.
+
+Each audio module owns a Tone node:
+
+Synth → Tone.Instrument (has .output)
+
+Effect → Tone.Effect
+
+Mixer channel → Tone.Gain + pan + meters
+
+When cables change:
+sourceToneNode.disconnect()
+sourceToneNode.connect(destinationToneNode)
+
+
+Tone.js internally builds the Web Audio graph.
+
+6. Mixer channels (this is where “tracks” live)
+
+This is the piece you’re probably missing.
+
+Each track gets:
+TrackChannel {
+  input: Tone.Gain
+  pan: Tone.Panner
+  volume: Tone.Volume
+  inserts: Tone.Effect[]
+  output: Tone.Gain
+}
+
+
+Visually:
+
+[Instrument] → [Track Channel] → [Master]
+
+Why this matters:
+
+Volume & pan live here
+
+Mute/solo live here
+
+Automation lives here
+
+Export stems later
+
+In Reason, this is the SSL mixer behind the rack.
+
+7. Master bus (always exists)
+
+Everything eventually routes here:
+
+MasterBus {
+  input: Tone.Gain
+  limiter: Tone.Limiter
+  output: Tone.Destination
+}
+
+
+No module should connect directly to Tone.Destination.
+
+8. CV / knob modulation (optional but powerful)
+
+This is how modular apps feel “alive”.
+
+Pattern:
+
+Knob emits normalized values (0–1)
+
+Engine maps value → parameter range
+
+Applies to Tone params
+
+filter.frequency.value = map(cv, 0, 1, 200, 8000)
+
+
+Later, you can replace knobs with LFOs or envelopes using the same system.
+
+9. How React Flow fits in cleanly
+UI action → Engine command
+
+Examples:
+
+Cable added → rebuild routing graph
+
+Knob moved → update Tone param
+
+Node deleted → dispose Tone node
+
+Play pressed → start transport
+
+React Flow never touches Tone.js directly.
+
+10. Minimal “correct” starting architecture
+
+If you want something that won’t paint you into a corner:
+
+Start with:
+
+Fixed Master Bus
+
+TrackChannel nodes
+
+Instrument nodes
+
+Effect nodes
+
+MIDI Sequencer node
+
+Rules:
+
+MIDI only routes to instruments
+
+Instruments must route to a TrackChannel
+
+TrackChannels route to Master
+
+Effects can sit between any audio nodes
+
+11. How Reason specifically does it (simplified)
+
+Each device has:
+
+MIDI In
+
+Audio In/Out
+
+CV In/Out
+
+The mixer is hidden but always present
+
+You can bypass it manually, but defaults exist
+
+Tracks are “logical,” not visual
+
+You’re basically rebuilding Reason’s rack + mixer + sequencer.

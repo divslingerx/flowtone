@@ -3,7 +3,10 @@
     "allow": [
       "Bash(node:*)",
       "Bash(cat:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(pnpm test:run:*)",
+      "Bash(pnpm build:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

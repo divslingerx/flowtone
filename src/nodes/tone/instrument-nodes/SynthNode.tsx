@@ -1,15 +1,27 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { type NodeProps } from "@xyflow/react";
+import { type SynthNode } from "../../types";
+import { useToneNode } from "~/hooks/useToneNode";
+import { DynamicHandles } from "~/components/handles";
+import { getPortConfigForNode } from "~/ports/registry";
+import { AutoNodeControls } from "~/components/auto-controls";
 
-import { type SynthNode } from "~/nodes/types";
+export function SynthNode({ data, id }: NodeProps<SynthNode>) {
+  const _synth = useToneNode(data.type, data.config);
+  const portConfig = getPortConfigForNode("Synth");
 
-export function SynthNode({ data }: NodeProps<SynthNode>) {
   return (
-    // We add this class to use the same styles as React Flow's default nodes.
     <div className="react-flow__node-default">
-      {data.label && <div>{data.label}</div>}
+      {data.label && <div className="text-lg font-semibold mb-3">{data.label}</div>}
 
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Bottom} />
+      <div className="nodrag">
+        <AutoNodeControls
+          nodeType="Synth"
+          nodeId={id}
+          currentData={data.config}
+        />
+      </div>
+
+      <DynamicHandles nodeId={id} ports={portConfig} />
     </div>
   );
 }

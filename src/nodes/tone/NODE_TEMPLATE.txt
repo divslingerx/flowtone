@@ -1,0 +1,81 @@
+/**
+ * NODE TEMPLATE
+ *
+ * Use this template to quickly create new Tone.js node implementations.
+ *
+ * Steps:
+ * 1. Copy this file to the appropriate directory (source-nodes/, effect-nodes/, etc.)
+ * 2. Replace ALL_CAPS placeholders with actual values
+ * 3. Update imports
+ * 4. Add to nodeTypes registry in src/nodes/index.ts
+ *
+ * Example:
+ * - NODE_NAME → Phaser
+ * - NODE_TYPE → PhaserNode
+ * - TONE_TYPE → "Phaser"
+ */
+
+import { type NodeProps } from "@xyflow/react";
+import { type NODE_TYPE } from "../../types";
+import { useToneNode } from "~/hooks/useToneNode";
+import { DynamicHandles } from "~/components/handles";
+import { getPortConfigForNode } from "~/ports/registry";
+import { AutoNodeControls } from "~/components/auto-controls";
+
+export function NODE_NAMENode({ data, id }: NodeProps<NODE_TYPE>) {
+  const node = useToneNode(data.type, data.config);
+  const portConfig = getPortConfigForNode(TONE_TYPE);
+
+  return (
+    <div className="react-flow__node-default">
+      {data.label && <div className="text-lg font-semibold mb-3">{data.label}</div>}
+
+      <div className="nodrag">
+        <AutoNodeControls
+          nodeType={TONE_TYPE}
+          nodeId={id}
+          currentData={data.config}
+        />
+      </div>
+
+      <DynamicHandles nodeId={id} ports={portConfig} />
+    </div>
+  );
+}
+
+/**
+ * QUICK REFERENCE:
+ *
+ * Effect Nodes:
+ * - AutoFilter, AutoPanner, AutoWah
+ * - BitCrusher, Chebyshev
+ * - Distortion
+ * - FeedbackDelay, PingPongDelay
+ * - Freeverb, JCReverb
+ * - FrequencyShifter, PitchShift
+ * - Phaser
+ * - StereoWidener
+ * - Tremolo, Vibrato
+ *
+ * Source Nodes:
+ * - AMOscillator, FMOscillator, FatOscillator
+ * - LFO
+ * - Oscillator
+ * - Player, GrainPlayer
+ * - PWMOscillator, PulseOscillator
+ *
+ * Instrument Nodes:
+ * - Synth, MonoSynth
+ * - AMSynth, FMSynth, DuoSynth
+ * - MembraneSynth, MetalSynth, NoiseSynth, PluckSynth
+ * - PolySynth
+ * - Sampler
+ *
+ * Component Nodes:
+ * - Envelope, FrequencyEnvelope
+ * - Volume, Panner
+ * - Merge, Split
+ * - BiquadFilter, EQ3
+ * - Gate, Limiter
+ * - Analyser, FFT, Meter, Waveform
+ */

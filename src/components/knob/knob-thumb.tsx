@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { mapFrom01Linear } from "@dsp-ts/math";
 
 type KnobBaseThumbProps = {
-  readonly theme: "stone" | "pink" | "green" | "sky";
+  readonly theme: "stone" | "pink" | "green" | "sky" | "blue" | "purple" | "red" | "orange";
   readonly value01: number;
 };
 
@@ -17,11 +17,15 @@ export function KnobBaseThumb({ theme, value01 }: KnobBaseThumbProps) {
         theme === "stone" && "bg-stone-300",
         theme === "pink" && "bg-pink-300",
         theme === "green" && "bg-green-300",
-        theme === "sky" && "bg-sky-300"
+        theme === "sky" && "bg-sky-300",
+        theme === "blue" && "bg-blue-300",
+        theme === "purple" && "bg-purple-300",
+        theme === "red" && "bg-red-300",
+        theme === "orange" && "bg-orange-300"
       )}
     >
       <div className="absolute h-full w-full" style={{ rotate: `${angle}deg` }}>
-        <div className="absolute left-1/2 top-0 h-1/2 w-[2px] -translate-x-1/2 rounded-sm bg-stone-950" />
+        <div className="absolute left-1/2 top-0 h-1/2 w-[2px] -translate-x-1/2 rounded-sm bg-stone-950 dark:bg-stone-50" />
       </div>
     </div>
   );

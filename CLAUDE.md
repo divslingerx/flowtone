@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flowtone is a web-based visual audio programming interface - essentially a modular synthesizer in the browser. Users create audio processing pipelines by dragging and connecting nodes in a visual workflow.
+Flowtone is a web-based visual audio programming interface - a modular synthesizer in the browser. Users create audio processing pipelines by dragging and connecting nodes in a visual workflow.
 
 ## Build Commands
 
@@ -15,7 +15,7 @@ pnpm lint       # Run ESLint
 pnpm preview    # Preview production build
 ```
 
-No test runner is currently configured. Package manager is `pnpm`.
+Package manager is `pnpm`. Vitest is installed as a dev dependency but not yet configured with project tests.
 
 ## Core Architecture
 
@@ -41,100 +41,84 @@ The `AudioEngine` is a facade over Tone.js located in `src/store/audioEngine.ts`
 - `connectNodes(source, target)` - Manages audio graph routing (separate from visual edges)
 - `updateNodeParams(id, params)` - Updates audio parameters (handles `Tone.Param` vs regular properties)
 - `handleMIDINote(id, note)` - Routes MIDI to audio nodes
-- `triggerNote(id, note)` - Triggers oscillators for playback
 
-The AudioEngine is created in both `main.tsx` and `App.tsx` - this may need refactoring to ensure singleton behavior.
+### Type System
 
-### Type System Architecture
+**Current system (types3.ts)**: Uses discriminated unions with `kind` field:
+- `"atomic"` - Single Tone.js wrapper node
+- `"composite"` - User-created presets (not yet implemented)
+- `"utility"` - MIDI and other non-Tone nodes
 
-Two type systems currently exist (migration in progress):
-
-**types.ts (v1)**: Uses advanced TypeScript generics to extract ALL Tone.js classes:
+Uses advanced TypeScript generics to extract 80+ Tone.js class types automatically:
 ```typescript
-type ExtractClassKeysReturningType<T, ReturnType, BaseClass>
+type ExtractClassesReturningType<T, ReturnType, BaseClass>
 ```
-This generates compile-time safety for 80+ Tone.js node types without manual typing. Each node has a distinct type like `OmniOscillatorNodeType`.
 
-**types2.ts (v2)**: Simplified system using `ToneComponent<T>` generic with `ConstructorParameters`. Migration to v2 appears to be in progress.
-
-**Node type definitions**: Use the union type `AppNode` which includes all possible node types.
+The `AppNode` union type includes all possible node types.
 
 ### Node Registration
 
-Nodes are registered in two places:
-- `src/nodes/index.ts` - `nodeTypes` object for React Flow
-- `src/nodes/tone/toneRegistry.ts` - Registry for Tone.js nodes (newer system)
-
-When creating new nodes, add to both registries.
-
-## Data Flow Patterns
-
-### Creating a Node
-1. User interaction (e.g., AddComponentNode button)
-2. `store.createNode(type)` called
-3. AudioEngine creates Tone.js instance
-4. Visual node added to Zustand store
-5. React Flow renders node component
-6. Component calls `useToneNode` hook (auto-disposes on unmount)
-
-### Connecting Nodes
-1. User drags edge in React Flow
-2. `onConnect` callback triggered
-3. `audioEngine.connectNodes(source, target)` creates audio connection
-4. Visual edge added to store
-5. React Flow renders edge
-
-### Updating Parameters
-1. User changes knob/slider
-2. `updateNodeData(id, { param: value })` updates visual state
-3. `audioEngine.updateNodeParams(id, params)` updates `Tone.Param`
-4. React re-renders with new value
-
-### MIDI Flow
-MIDI Device → `@react-midi/hooks` → `MidiInputNode` → AudioEngine → Tone.js nodes
+Nodes are registered in:
+- `src/nodes/index.ts` - `nodeTypes` object for React Flow (50+ nodes implemented)
+- `src/ports/registry.ts` - Port configurations for connection handling
 
 ## Creating New Audio Nodes
 
-To implement a new Tone.js node (e.g., Reverb):
+Use the template at `src/nodes/tone/NODE_TEMPLATE.tsx` as a starting point:
 
-1. **Type already exists** in `src/nodes/types.ts` (all 80+ Tone.js types pre-defined)
+1. **Copy template** to appropriate folder (`source-nodes/`, `effect-nodes/`, `instrument-nodes/`, or `component-nodes/`)
+2. **Replace placeholders** (`NODE_NAME`, `NODE_TYPE`, `TONE_TYPE`) with actual values
+3. **Register in** `src/nodes/index.ts` - add import and entry to `nodeTypes` object
+4. **Add port config** in `src/ports/registry.ts` using helpers like `createSinglePortConfig("audio")`
+5. **Optional**: Add parameter metadata overrides in `src/lib/parameters/metadata.ts`
 
-2. **Create React component** in appropriate folder:
-   ```tsx
-   // src/nodes/tone/effect-nodes/ReverbNode.tsx
-   import { useToneNode } from '~/hooks/useToneNode';
-   import { Handle, Position } from '@xyflow/react';
+## Auto-Generation Systems
 
-   export function ReverbNode({ data, id }: NodeProps<ReverbNodeType>) {
-     const reverb = useToneNode(data.type, data.config);
-     const { updateNodeData } = useRFStore();
+### Parameter Controls (AutoNodeControls)
 
-     return (
-       <div>
-         <Handle type="target" position={Position.Top} />
-         {/* UI controls - use .nodrag class on interactive elements */}
-         <Handle type="source" position={Position.Bottom} />
-       </div>
-     );
-   }
-   ```
+Located in `src/components/auto-controls/`. Automatically generates UI controls:
 
-3. **Register in** `src/nodes/index.ts`:
-   ```ts
-   import { ReverbNode } from './tone/effect-nodes/ReverbNode';
+1. Fetches Tone.js defaults via `ToneClass.getDefaults()`
+2. Looks up control type in `src/lib/parameters/metadata.ts`:
+   - `PARAMETER_DEFAULTS` - Maps parameter names to control types
+   - `NODE_METADATA` - Node-specific overrides, ordering, grouping
+3. Renders appropriate knob variant (frequency, time, normalized, Q, etc.)
 
-   export const nodeTypes = {
-     Reverb: ReverbNode,
-     // ...
-   };
-   ```
+### Dynamic Handles (DynamicHandles)
 
-4. **Add to toneRegistry** (if using new system) in `src/nodes/tone/toneRegistry.ts`
+Located in `src/components/handles/`. Auto-generates React Flow handles based on port config:
+- Color-coded by signal type: green=audio, blue=control, purple=MIDI, orange=trigger
+- Positions determined by port registry
+
+### Knob Variants
+
+Available in `src/components/knob/knob-variants.tsx`:
+- `KnobFrequency` - Logarithmic 20Hz-20kHz
+- `KnobTime` - Logarithmic milliseconds to seconds
+- `KnobNormalized` - Linear 0-1
+- `KnobQ` - Logarithmic resonance
+- `KnobDetune` - Linear cents
+- `KnobRatio` - Compressor ratio
+- `KnobGain` - Linear gain
+
+## Port System
+
+Located in `src/ports/`:
+
+**Signal Types**: `"audio" | "control" | "midi" | "trigger"`
+
+**Port Config Helpers**:
+- `createSinglePortConfig("audio")` - Standard in/out
+- `createSourcePortConfig("audio")` - Source nodes (no input)
+- `createMergePortConfig(2)` - Multi-input nodes
+- `createSplitPortConfig(2)` - Multi-output nodes
+
+**Connection Validation**: `src/validation/connectionValidation.ts` - Validates connections based on port signal types
 
 ## Key Implementation Patterns
 
-### Use useToneNode Hook
-Located in `src/hooks/useToneNode.ts`. This hook:
+### useToneNode Hook
+Located in `src/hooks/useToneNode.ts`:
 - Creates Tone.js instances with proper cleanup
 - Automatically calls `.dispose()` on unmount
 - Provides type-safe config passing
@@ -142,56 +126,25 @@ Located in `src/hooks/useToneNode.ts`. This hook:
 ### Interactive Elements in Nodes
 Add `.nodrag` class to prevent React Flow from intercepting drag events:
 ```tsx
-<Knob className="nodrag" onChange={handleChange} />
+<div className="nodrag">
+  <Knob onChange={handleChange} />
+</div>
 ```
 
 ### Audio Parameter Scaling
-Use `NormalisableRange` from `src/lib/NormalisableRange.ts` for logarithmic parameters (frequency, etc.):
+Use `NormalisableRange` from `src/lib/NormalisableRange.ts` for logarithmic parameters:
 ```tsx
 const range = new NormalisableRange(20, 20000, 1000, 0.3, false);
 const normalised = range.convertTo0to1(440); // Hz to 0-1
 const hz = range.convertFrom0to1(normalised); // 0-1 to Hz
 ```
 
-### Parameter Updates Must Sync Both States
+### Manual Parameter Updates (when not using AutoNodeControls)
 ```tsx
 const handleChange = (value: number) => {
-  // Update visual state
-  updateNodeData(id, { frequency: value });
-
-  // Update audio state
-  audioEngine.updateNodeParams(id, { frequency: value });
+  updateNodeData(id, { frequency: value });           // Visual state
+  audioEngine.updateNodeParams(id, { frequency: value }); // Audio state
 };
-```
-
-## Project Structure Reference
-
-```
-/src
-├── store/
-│   ├── store.ts           # Zustand store with nodes/edges/actions
-│   ├── audioEngine.ts     # AudioEngine facade over Tone.js
-│   └── audioContext.ts    # React context for AudioEngine
-├── nodes/
-│   ├── types.ts           # Type system v1 (current)
-│   ├── types2.ts          # Type system v2 (migration target)
-│   ├── index.ts           # Node registry for React Flow
-│   ├── MidiInputNode.tsx
-│   ├── MidiPianoNode.tsx
-│   ├── AddComponentNode.tsx
-│   └── tone/
-│       ├── source-nodes/      # Oscillators, LFO
-│       ├── component-nodes/   # Filters, Envelopes, Channel
-│       ├── instrument-nodes/  # Synths
-│       ├── effect-nodes/      # Reverb, Delay, etc.
-│       └── toneRegistry.ts
-├── hooks/
-│   └── useToneNode.ts     # Tone.js lifecycle hook
-├── components/
-│   └── knob/              # Rotary knob UI controls
-└── lib/
-    ├── utils.ts           # Tailwind class utilities
-    └── NormalisableRange.ts  # Audio parameter scaling
 ```
 
 ## Important Technical Notes
@@ -204,31 +157,62 @@ const handleChange = (value: number) => {
 - Strict mode enabled
 - `noUncheckedIndexedAccess: true` - array access may be `undefined`
 
-### Initial Demo Graph
-`src/nodes/index.ts` contains hardcoded `initialNodes` and `initialEdges` for demo purposes. These create an example audio graph on load.
-
 ### Tone.js Parameter Handling
 The AudioEngine differentiates between:
 - `Tone.Param` objects (frequency, detune, etc.) - require `.value` setter
 - Regular properties (type, count, etc.) - direct assignment
 
+### Continuous Sources
+Oscillators and LFO must call `.start()` - typically done in `useEffect` after creation.
+
 ### MIDI Integration
 Uses `@react-midi/hooks` for Web MIDI API access. `useMIDINote()` hook provides MIDI note data in `MidiInputNode.tsx`.
 
+## Project Structure
+
+```
+/src
+├── store/
+│   ├── store.ts           # Zustand store with nodes/edges/actions
+│   ├── audioEngine.ts     # AudioEngine facade over Tone.js
+│   └── audioContext.ts    # React context for AudioEngine
+├── nodes/
+│   ├── types3.ts          # Current type system (discriminated unions)
+│   ├── index.ts           # Node registry for React Flow
+│   └── tone/
+│       ├── source-nodes/      # Oscillators, LFO, Players
+│       ├── instrument-nodes/  # Synths
+│       ├── effect-nodes/      # Reverb, Delay, Chorus, etc.
+│       └── component-nodes/   # Channel, Envelopes, Filters
+├── ports/
+│   ├── types.ts           # Port type definitions
+│   └── registry.ts        # Port configs for all node types
+├── components/
+│   ├── auto-controls/     # Auto-generated parameter controls
+│   ├── handles/           # DynamicHandles component
+│   ├── knob/              # Knob variants for different param types
+│   └── node-catalog/      # Sidebar node browser
+├── hooks/
+│   └── useToneNode.ts     # Tone.js lifecycle hook
+├── lib/
+│   ├── parameters/        # Parameter metadata registry
+│   └── NormalisableRange.ts
+└── validation/
+    └── connectionValidation.ts
+```
+
 ## Current Implementation Status
 
-**Fully implemented** (6 nodes):
-- MidiInputNode, MidiPianoNode
-- OmniOscillator
-- AmplitudeEnvelope, FrequencyEnvelope
-- Filter, Channel, Panner
+50 nodes registered in `src/nodes/index.ts`:
+- 3 utility (MIDI input, MIDI piano, node catalog)
+- 10 source (oscillators, LFO, players)
+- 6 instrument (synths)
+- 18 effect (reverbs, delays, modulation, distortion)
+- 13 component (envelopes, channel strips, analysis)
 
-**Type definitions only** (80+ nodes):
-All Tone.js sources, instruments, effects, and components have TypeScript types defined but need UI implementation.
+Most nodes use `AutoNodeControls` for automatic UI generation.
 
-## Known Issues / Areas to Be Aware Of
+## Known Issues
 
-- **AudioEngine created twice**: Once in `main.tsx`, once in `App.tsx` - verify singleton behavior
-- **Two type systems**: Migration from `types.ts` to `types2.ts` in progress
-- **Two node registries**: `nodeTypes` and `toneRegistry` - consolidation needed
-- Some nodes have duplicate entries in README (e.g., "AmplitudeEnvelope" appears twice)
+- **AudioEngine created twice**: Once in `main.tsx`, once in `App.tsx` - may need singleton refactoring
+- **Legacy type files**: `types.ts` and `types2.ts` exist but `types3.ts` is current

@@ -8,6 +8,6 @@ export const createMixer = ({ channels }: MixerProps) => ({
   id: nanoid(6),
   type: "Mixer",
   data: {
-    channels: 12,
+    channels,
   },
 });

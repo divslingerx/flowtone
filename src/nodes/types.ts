@@ -1,6 +1,9 @@
 import type { Node } from "@xyflow/react";
 export type { Node };
 import * as Tone from "tone";
+
+// Re-export ToneComponentKey from types3.ts (the current type system)
+export type { ToneComponentKey } from "./types3";
 import type { Source } from "tone/build/esm/source/Source";
 import type { Effect } from "tone/build/esm/effect/Effect";
 import type { Envelope, Signal } from "tone";

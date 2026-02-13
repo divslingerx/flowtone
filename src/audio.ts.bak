@@ -1,8 +1,12 @@
-import { ToneComponentKey, ToneNode } from "./nodes/types";
+/**
+ * @deprecated This file is kept for reference but is not actively used.
+ * Audio functionality has been moved to src/store/audioEngine.ts
+ */
+import { ToneComponentKey } from "./nodes/types";
 import * as Tone from "tone";
 
 const context = new AudioContext();
-const nodes = new Map();
+const nodes = new Map<string, AudioNode | Tone.ToneAudioNode>();
 
 const osc = context.createOscillator();
 osc.frequency.value = 220;
@@ -18,23 +22,31 @@ nodes.set("a", osc);
 nodes.set("b", amp);
 nodes.set("c", out);
 
-export function updateAudioNode(id: string, data) {
+export function updateAudioNode(id: string, data: Record<string, unknown>) {
   const node = nodes.get(id);
+  if (!node) return;
 
   for (const [key, val] of Object.entries(data)) {
-    if (node[key] instanceof AudioParam) {
-      node[key].value = val;
+    const nodeAny = node as unknown as Record<string, unknown>;
+    const param = nodeAny[key];
+    if (param instanceof AudioParam) {
+      param.value = val as number;
     } else {
-      node[key] = val;
+      nodeAny[key] = val;
     }
   }
 }
 
 export function removeAudioNode(id: string) {
   const node = nodes.get(id);
+  if (!node) return;
 
-  node.disconnect();
-  node.stop?.();
+  if ("disconnect" in node) {
+    node.disconnect();
+  }
+  if ("stop" in node && typeof node.stop === "function") {
+    node.stop();
+  }
 
   nodes.delete(id);
 }
@@ -42,8 +54,11 @@ export function removeAudioNode(id: string) {
 export function connect(sourceId: string, targetId: string) {
   const source = nodes.get(sourceId);
   const target = nodes.get(targetId);
+  if (!source || !target) return;
 
-  source.connect(target);
+  if ("connect" in source && typeof source.connect === "function") {
+    source.connect(target as AudioNode);
+  }
 }
 
 export function isRunning() {
@@ -54,29 +69,22 @@ export function toggleAudio() {
   return isRunning() ? context.suspend() : context.resume();
 }
 
-export function createAudioNode<T extends ToneNode>(
+export function createAudioNode(
   id: string,
   type: ToneComponentKey,
-  data: T["data"]["config"]
+  data: Partial<Tone.OmniOscillatorOptions>
 ) {
   switch (type) {
     case "OmniOscillator": {
-      const node = new Tone.OmniOscillator(data as Tone.OmniOscillatorOptions);
-      node.type = data.type;
+      const node = new Tone.OmniOscillator(data);
       node.start();
-
       nodes.set(id, node);
       break;
     }
-
-    case "amp": {
+    case "Gain": {
       const node = context.createGain();
-      node.gain.value = data.gain;
-
       nodes.set(id, node);
       break;
     }
   }
 }
-
-const s = createAudioNode("a", "OmniOscillator", {});

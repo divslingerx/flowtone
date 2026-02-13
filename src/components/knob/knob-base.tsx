@@ -26,6 +26,7 @@ type KnobBaseProps = Pick<
     readonly valueDefault: number;
     readonly stepFn: (valueRaw: number) => number;
     readonly stepLargerFn: (valueRaw: number) => number;
+    readonly onChange?: (value: number) => void;
   };
 
 export function KnobBase({
@@ -41,6 +42,7 @@ export function KnobBase({
   stepLargerFn,
   mapTo01 = mapTo01Linear,
   mapFrom01 = mapFrom01Linear,
+  onChange,
 }: KnobBaseProps) {
   const knobId = useId();
   const labelId = useId();
@@ -50,13 +52,18 @@ export function KnobBase({
   const stepLarger = stepLargerFn(valueRaw);
   const dragSensitivity = 0.006;
 
+  const handleValueChange = (newValue: number) => {
+    setValueRaw(newValue);
+    onChange?.(newValue);
+  };
+
   const keyboardControlHandlers = useKnobKeyboardControls({
     valueRaw,
     valueMin,
     valueMax,
     step,
     stepLarger,
-    onValueRawChange: setValueRaw,
+    onValueRawChange: handleValueChange,
   });
 
   return (
@@ -80,7 +87,7 @@ export function KnobBase({
         orientation={orientation}
         mapTo01={mapTo01}
         mapFrom01={mapFrom01}
-        onValueRawChange={setValueRaw}
+        onValueRawChange={handleValueChange}
         {...keyboardControlHandlers}
       >
         <KnobBaseThumb theme={theme} value01={value01} />

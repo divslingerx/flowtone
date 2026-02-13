@@ -1,23 +1,22 @@
-import { useRef, useEffect } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-import * as Tone from "tone";
-
+import { type NodeProps } from "@xyflow/react";
 import { type ChannelNode } from "../../types";
+import { useToneNode } from "~/hooks/useToneNode";
+import { DynamicHandles } from "~/components/handles";
+import { getPortConfigForNode } from "~/ports/registry";
 
 export function ChannelNode({ data, id }: NodeProps<ChannelNode>) {
-  const channel = useRef<Tone.Channel | null>(null);
-
-  useEffect(() => {
-    channel.current = new Tone.Channel().toDestination();
-  }, []);
+  const _channel = useToneNode(data.type, data.config);
+  const portConfig = getPortConfigForNode("Channel");
 
   return (
-    // We add this class to use the same styles as React Flow's default nodes.
     <div className="react-flow__node-default">
-      {data.label && <div>{data.label}</div>}
-      <p>My ID is: {`${id}`}</p>
+      {data.label && <div className="text-lg font-semibold mb-3">{data.label}</div>}
 
-      <Handle type="target" position={Position.Top} />
+      <div className="text-xs text-gray-600 dark:text-gray-400 text-center py-2">
+        Channel strip with volume and pan
+      </div>
+
+      <DynamicHandles nodeId={id} ports={portConfig} />
     </div>
   );
 }

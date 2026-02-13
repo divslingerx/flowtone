@@ -21,7 +21,7 @@ import * as Tone from "tone";
 export interface RFStore {
   nodes: AppNode[];
   edges: Edge[];
-  audioEngine: AudioEngine;
+  audioEngine: AudioEngine | null;
   getNode: (id: string) => AppNode;
   onNodesChange: OnNodesChange<AppNode>;
   onEdgesChange: OnEdgesChange;
@@ -34,16 +34,19 @@ export interface RFStore {
   ) => void;
   addEdge: (data: Omit<Edge, "id">) => void;
   createNode: (type: ToneComponentKey) => void;
+  // New: Initialize store with external AudioEngine
+  setAudioEngine: (engine: AudioEngine) => void;
 }
-
-// this is our useStore hook that we can use in our components to get parts of the store and call actions
-const audioEngine = new AudioEngine();
 
 export const useRFStore = createWithEqualityFn(
   devtools<RFStore>((set, get) => ({
     nodes: initialNodes,
     edges: initialEdges,
-    audioEngine,
+    audioEngine: null, // Will be set via setAudioEngine
+
+    setAudioEngine: (engine: AudioEngine) => {
+      set({ audioEngine: engine });
+    },
 
     getNode: (id: string) => {
       const node = get().nodes.find((n) => n.id === id);
@@ -52,25 +55,40 @@ export const useRFStore = createWithEqualityFn(
     },
 
     onNodesChange: (changes) => {
-      console.log("Node Changes", changes);
       set({
         nodes: applyNodeChanges(changes, get().nodes),
       });
     },
 
     onEdgesChange: (changes) => {
-      console.log("Edge Changes", changes);
+      const { audioEngine, edges } = get();
+
+      // Handle edge deletions - disconnect audio
+      if (audioEngine) {
+        for (const change of changes) {
+          if (change.type === "remove") {
+            const edge = edges.find((e) => e.id === change.id);
+            if (edge) {
+              try {
+                audioEngine.disconnectNodes(edge.source, edge.target);
+              } catch (error) {
+                console.warn(`Failed to disconnect audio for edge ${change.id}:`, error);
+              }
+            }
+          }
+        }
+      }
+
       set({
-        edges: applyEdgeChanges(changes, get().edges),
+        edges: applyEdgeChanges(changes, edges),
       });
     },
 
     setNodes: (nodes) => {
-      console.log("SetNodes", nodes);
       set({ nodes });
     },
+
     setEdges: (edges) => {
-      console.log("setEdges", edges);
       set({ edges });
     },
 
@@ -81,7 +99,13 @@ export const useRFStore = createWithEqualityFn(
     },
 
     createNode<T extends ToneComponentKey>(type: T) {
-      const id = nanoid(); // Unique ID for the node
+      const { audioEngine } = get();
+      if (!audioEngine) {
+        console.error("Cannot create node: AudioEngine not initialized");
+        return;
+      }
+
+      const id = nanoid();
 
       // Create audio node through AudioEngine
       const node = audioEngine.createNode(id, type);
@@ -96,9 +120,8 @@ export const useRFStore = createWithEqualityFn(
         )
       );
 
-      const position = { x: 400, y: 0 }; // Default position
+      const position = { x: 400, y: 0 };
 
-      // Update the store with the new node
       set({
         nodes: [
           ...get().nodes,
@@ -118,9 +141,13 @@ export const useRFStore = createWithEqualityFn(
       id: string,
       data: Partial<NodeType["data"]>
     ) => {
+      const { audioEngine } = get();
+
       try {
         // Update audio parameters through AudioEngine
-        audioEngine.updateNodeParams(id, data);
+        if (audioEngine) {
+          audioEngine.updateNodeParams(id, data);
+        }
 
         // Update store state
         set({
@@ -137,9 +164,13 @@ export const useRFStore = createWithEqualityFn(
     },
 
     onConnect: (connection) => {
+      const { audioEngine } = get();
+
       try {
         // Create audio connection
-        audioEngine.connectNodes(connection.source, connection.target);
+        if (audioEngine && connection.source && connection.target) {
+          audioEngine.connectNodes(connection.source, connection.target);
+        }
 
         // Update store state
         set({

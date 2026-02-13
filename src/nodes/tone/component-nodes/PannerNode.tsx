@@ -1,35 +1,21 @@
-import { useRef, useEffect } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-
-import * as Tone from "tone";
-
+import { type NodeProps } from "@xyflow/react";
 import { type PannerNode } from "../../types";
+import { useToneNode } from "~/hooks/useToneNode";
+import { DynamicHandles } from "~/components/handles";
+import { getPortConfigForNode } from "~/ports/registry";
+import { AutoNodeControls } from "~/components/auto-controls";
 
 export function PannerNode({ data, id }: NodeProps<PannerNode>) {
-  const Filter = useRef<Tone.Panner | null>(null);
-
-  useEffect(() => {
-    Filter.current = new Tone.Panner();
-  }, []);
+  const _panner = useToneNode("Panner" as any, { pan: data.value });
+  const portConfig = getPortConfigForNode("Panner");
 
   return (
     <div className="react-flow__node-default">
-      {data.label && <div>{data.label} Node</div>}
-      <p>My ID is: {`${id}`}</p>
-
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="frequency" // Specific target handle ID
-        color="#ff69b4"
-      />
-
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="input" // Another specific target handle ID
-      />
-      <Handle type="source" position={Position.Bottom} id="output" />
+      {data.label && <div className="text-lg font-semibold mb-3">{data.label}</div>}
+      <div className="nodrag">
+        <AutoNodeControls nodeType="Panner" nodeId={id} currentData={{ pan: data.value }} />
+      </div>
+      <DynamicHandles nodeId={id} ports={portConfig} />
     </div>
   );
 }

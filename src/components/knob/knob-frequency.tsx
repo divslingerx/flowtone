@@ -6,12 +6,17 @@ type KnobBaseProps = React.ComponentProps<typeof KnobBase>;
 type KnobFrequencyProps = Pick<
   KnobBaseProps,
   "theme" | "label" | "orientation"
->;
+> & {
+  value?: number;
+  onChange?: (value: number) => void;
+};
 
 export function KnobFrequency(props: KnobFrequencyProps) {
+  const { value, onChange, ...restProps } = props;
+
   return (
     <KnobBase
-      valueDefault={valueDefault}
+      valueDefault={value ?? valueDefault}
       valueMin={valueMin}
       valueMax={valueMax}
       stepFn={stepFn}
@@ -20,7 +25,7 @@ export function KnobFrequency(props: KnobFrequencyProps) {
       valueRawDisplayFn={valueRawDisplayFn}
       mapTo01={mapTo01}
       mapFrom01={mapFrom01}
-      {...props}
+      {...restProps}
     />
   );
 }

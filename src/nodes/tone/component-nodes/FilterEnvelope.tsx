@@ -1,25 +1,27 @@
-import { useRef, useEffect } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-import * as Tone from "tone";
-
+import { type NodeProps } from "@xyflow/react";
 import { type FrequencyEnvelopeNode } from "~/nodes/types";
+import { useToneNode } from "~/hooks/useToneNode";
+import { DynamicHandles } from "~/components/handles";
+import { getPortConfigForNode } from "~/ports/registry";
+import { AutoNodeControls } from "~/components/auto-controls";
 
-export function FrequencyEnvelopeNode({
-  data,
-  id,
-}: NodeProps<FrequencyEnvelopeNode>) {
-  const Filter = useRef<Tone.Filter | null>(null);
-
-  useEffect(() => {
-    Filter.current = new Tone.Filter();
-  }, []);
+export function FrequencyEnvelopeNode({ data, id }: NodeProps<FrequencyEnvelopeNode>) {
+  const _envelope = useToneNode(data.type, data.config);
+  const portConfig = getPortConfigForNode("FrequencyEnvelope");
 
   return (
-    // We add this class to use the same styles as React Flow's default nodes.
     <div className="react-flow__node-default">
-      {data.label && <div>{data.label}</div>}
-      <p>My ID is: {`${id}`}</p>
-      <Handle type="source" position={Position.Bottom} />
+      {data.label && <div className="text-lg font-semibold mb-3">{data.label}</div>}
+
+      <div className="nodrag">
+        <AutoNodeControls
+          nodeType="FrequencyEnvelope"
+          nodeId={id}
+          currentData={data.config}
+        />
+      </div>
+
+      <DynamicHandles nodeId={id} ports={portConfig} />
     </div>
   );
 }
