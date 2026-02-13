@@ -3,8 +3,6 @@ import type { NodeTypes } from "@xyflow/react";
 import { AppNode } from "./types";
 import { MidiInputNode } from "./MidiInputNode";
 import { MidiPianoNode } from "./MidiPianoNode";
-import { AddComponentNode } from "./AddComponentNode";
-
 // Source Nodes
 import { OmniOscillatorNode } from "./tone/source-nodes/OmniOscillatorNode";
 import { OscillatorNode } from "./tone/source-nodes/OscillatorNode";
@@ -61,110 +59,12 @@ import { FFTNode } from "./tone/component-nodes/FFTNode";
 import { MeterNode } from "./tone/component-nodes/MeterNode";
 import { WaveformNode } from "./tone/component-nodes/WaveformNode";
 
-export const initialNodes: AppNode[] = [
-  {
-    id: "p",
-    type: "MidiPiano",
-    position: { x: 400, y: -400 },
-    data: { label: "Piano Midi Player", config: {} },
-  },
-  {
-    id: "a",
-    type: "Midi",
-    position: { x: 600, y: -125 },
-    data: { label: "Midi Input", config: {} },
-  },
-  {
-    id: "b",
-    type: "OmniOscillator",
-    position: { x: 600, y: 0 },
-    data: {
-      label: "OmniOscillator",
-      type: "OmniOscillator",
-      package: "Tone" as const,
-      config: {
-        detune: 0,
-        mute: false,
-        frequency: 440,
-        type: "sine",
-      },
-    },
-  },
-  {
-    id: "c",
-    type: "AmplitudeEnvelope",
-    position: { x: 600, y: 225 },
-    data: {
-      label: "AmplitudeEnvelope",
-      type: "AmplitudeEnvelope",
-      package: "Tone" as const,
-      config: {
-        attack: 0.1,
-        decay: 0.2,
-        sustain: 0.8,
-        release: 0.5,
-      },
-    },
-  },
-  {
-    id: "d",
-    type: "Filter",
-    position: { x: 600, y: 350 },
-    data: {
-      label: "Filter",
-      type: "Filter",
-      package: "Tone" as const,
-      config: {
-        frequency: 440,
-        type: "lowpass",
-      },
-    },
-  },
-  {
-    id: "e",
-    type: "FrequencyEnvelope",
-    position: { x: 800, y: 225 },
-    data: {
-      label: "FrequencyEnvelope",
-      type: "FrequencyEnvelope",
-      package: "Tone" as const,
-      config: {
-        attack: 0.1,
-        decay: 0.2,
-        sustain: 0.8,
-        release: 0.5,
-      },
-    },
-  },
-  {
-    id: "f",
-    type: "Channel",
-    position: { x: 600, y: 425 },
-    data: {
-      label: "Output",
-      type: "Channel",
-      package: "Tone" as const,
-      config: {
-        mute: false,
-        solo: false,
-        pan: 0,
-        volume: 0.5,
-      },
-    },
-  },
-  {
-    id: "g",
-    type: "StoreNode",
-    position: { x: 800, y: -100 },
-    data: {},
-  },
-];
+export const initialNodes: AppNode[] = [];
 
 export const nodeTypes = {
   // Utility Nodes
   Midi: MidiInputNode,
   MidiPiano: MidiPianoNode,
-  StoreNode: AddComponentNode,
 
   // Source Nodes
   OmniOscillator: OmniOscillatorNode,

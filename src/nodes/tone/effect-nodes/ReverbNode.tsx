@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type ReverbNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function ReverbNode({ data, id }: NodeProps<ReverbNode>) {
-  const _reverb = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Reverb");
 
   return (

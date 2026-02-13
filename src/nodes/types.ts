@@ -26,8 +26,6 @@ export type MidiInputNode = Node<
   "Midi"
 >;
 
-export type StoreNode = Node<Record<string, unknown>, "StoreNode">;
-
 export type MidiPianoNode = Node<
   {
     label: string;
@@ -355,5 +353,4 @@ export type AppNode =
   | VolumeNode
   | WaveformNode
   | MidiInputNode
-  | StoreNode
   | MidiPianoNode;

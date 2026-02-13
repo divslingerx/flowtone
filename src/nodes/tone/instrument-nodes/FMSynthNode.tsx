@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type FMSynthNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function FMSynthNode({ data, id }: NodeProps<FMSynthNode>) {
-  const _synth = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("FMSynth");
 
   return (

@@ -7,7 +7,8 @@ import { edgeTypes } from "./edges";
 import * as Tone from "tone";
 import { useAudioEngine } from "./store/audioContext";
 import { NodeCatalog } from "./components/node-catalog";
-import { useCallback, useRef } from "react";
+import { StartupModal } from "./components/startup-modal";
+import { useCallback, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 import type { ToneComponentKey } from "./nodes/types";
 
@@ -16,13 +17,15 @@ const selector = (store: RFStore) => ({
   edges: store.edges,
   onNodesChange: store.onNodesChange,
   onEdgesChange: store.onEdgesChange,
-  addEdge: store.addEdge,
+  onConnect: store.onConnect,
 });
 
 export default function App() {
+  const [isStarted, setIsStarted] = useState(false);
+
   // Use the singleton AudioEngine from context (created in main.tsx)
   const audioEngine = useAudioEngine();
-  const { addEdge, nodes, edges, onEdgesChange, onNodesChange } = useRFStore(
+  const { onConnect, nodes, edges, onEdgesChange, onNodesChange } = useRFStore(
     selector,
     shallow
   );
@@ -83,13 +86,14 @@ export default function App() {
     e.dataTransfer.dropEffect = "copy";
   }, []);
 
-  const toggleAudio = () => {
-    if (Tone.getContext().state === "suspended") {
-      Tone.getContext().resume();
-    } else {
-      Tone.getContext().rawContext.suspend(0);
-    }
+  const handleStart = async () => {
+    await Tone.start();
+    setIsStarted(true);
   };
+
+  if (!isStarted) {
+    return <StartupModal onStart={handleStart} />;
+  }
 
   return (
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
@@ -108,10 +112,9 @@ export default function App() {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onConnect={addEdge}
+          onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          onClick={toggleAudio}
           fitView
           maxZoom={1.5}
         >

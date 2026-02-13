@@ -1,18 +1,11 @@
 import { type NodeProps } from "@xyflow/react";
 import { type OmniOscillatorNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
-import { useEffect } from "react";
 
 export function OmniOscillatorNode({ data, id }: NodeProps<OmniOscillatorNode>) {
-  const oscillator = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("OmniOscillator");
-
-  useEffect(() => {
-    oscillator?.start();
-  }, [oscillator]);
 
   return (
     <div className="react-flow__node-default">

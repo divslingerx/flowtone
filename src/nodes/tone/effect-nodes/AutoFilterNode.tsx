@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type AutoFilterNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function AutoFilterNode({ data, id }: NodeProps<AutoFilterNode>) {
-  const _autoFilter = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("AutoFilter");
 
   return (

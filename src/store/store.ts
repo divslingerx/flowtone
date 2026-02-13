@@ -55,6 +55,21 @@ export const useRFStore = createWithEqualityFn(
     },
 
     onNodesChange: (changes) => {
+      const { audioEngine } = get();
+
+      // Dispose audio nodes before removing from visual state
+      if (audioEngine) {
+        for (const change of changes) {
+          if (change.type === "remove") {
+            try {
+              audioEngine.removeNode(change.id);
+            } catch (error) {
+              console.warn(`Failed to remove audio node ${change.id}:`, error);
+            }
+          }
+        }
+      }
+
       set({
         nodes: applyNodeChanges(changes, get().nodes),
       });

@@ -19,7 +19,7 @@ export interface NodeDefinition {
   /**
    * Node type identifier (matches Tone.js class name or custom type)
    */
-  type: ToneComponentKey | "Midi" | "MidiPiano" | "StoreNode";
+  type: ToneComponentKey | "Midi" | "MidiPiano";
 
   /**
    * Display name in the catalog

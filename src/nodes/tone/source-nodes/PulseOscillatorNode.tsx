@@ -1,18 +1,11 @@
 import { type NodeProps } from "@xyflow/react";
 import { type PulseOscillatorNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
-import { useEffect } from "react";
 
 export function PulseOscillatorNode({ data, id }: NodeProps<PulseOscillatorNode>) {
-  const oscillator = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("PulseOscillator");
-
-  useEffect(() => {
-    oscillator?.start();
-  }, [oscillator]);
 
   return (
     <div className="react-flow__node-default">

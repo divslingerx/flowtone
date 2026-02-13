@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type CompressorNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function CompressorNode({ data, id }: NodeProps<CompressorNode>) {
-  const _compressor = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Compressor");
 
   return (

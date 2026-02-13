@@ -1,11 +1,9 @@
 import { type NodeProps } from "@xyflow/react";
 import { type AnalyserNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 
 export function AnalyserNode({ data, id }: NodeProps<AnalyserNode>) {
-  const _analyser = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Analyser");
 
   return (

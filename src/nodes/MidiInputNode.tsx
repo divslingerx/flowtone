@@ -16,7 +16,7 @@ interface MidiInputNodeData extends MidiInputNode {
   connections?: AppEdge[];
 }
 
-export function MidiInputNode({ data }: NodeProps<MidiInputNodeData>) {
+export function MidiInputNode({ data, id }: NodeProps<MidiInputNodeData>) {
   const midiNote = useMIDINote();
   const devices = useMIDIInputs();
   const audioEngine = useContext(AudioEngineContext);
@@ -72,7 +72,7 @@ export function MidiInputNode({ data }: NodeProps<MidiInputNodeData>) {
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} />
+      <Handle id={`${id}:out:0`} type="source" position={Position.Bottom} />
     </div>
   );
 }

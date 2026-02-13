@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type BitCrusherNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function BitCrusherNode({ data, id }: NodeProps<BitCrusherNode>) {
-  const _bitCrusher = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("BitCrusher");
 
   return (

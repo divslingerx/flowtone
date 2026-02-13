@@ -473,14 +473,6 @@ export type MidiPianoNode = Node<
   "MidiPiano"
 >;
 
-export type StoreNode = Node<
-  {
-    kind: "utility";
-    config: Record<string, unknown>;
-  },
-  "StoreNode"
->;
-
 // ============================================================================
 // CONCRETE ATOMIC NODE TYPES (with proper type extraction)
 // ============================================================================
@@ -673,8 +665,7 @@ export type AppNode =
   | CompositeNode
   // Utility nodes
   | MidiInputNode
-  | MidiPianoNode
-  | StoreNode;
+  | MidiPianoNode;
 
 // ============================================================================
 // TYPE GUARDS
@@ -699,7 +690,7 @@ export function isCompositeNode(node: AppNode): node is CompositeNode {
  */
 export function isUtilityNode(
   node: AppNode
-): node is MidiInputNode | MidiPianoNode | StoreNode {
+): node is MidiInputNode | MidiPianoNode {
   return "data" in node && "kind" in node.data && node.data.kind === "utility";
 }
 

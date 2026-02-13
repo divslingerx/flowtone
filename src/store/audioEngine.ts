@@ -9,6 +9,17 @@ export interface MIDINoteEvent {
  * AudioEngine handles all Tone.js audio node creation, connection,
  * and parameter management for the application.
  */
+const CONTINUOUS_SOURCES = new Set([
+  "Oscillator",
+  "OmniOscillator",
+  "AMOscillator",
+  "FMOscillator",
+  "FatOscillator",
+  "PWMOscillator",
+  "PulseOscillator",
+  "LFO",
+]);
+
 export class AudioEngine {
   private nodes: Map<string, InstanceType<typeof Tone.ToneAudioNode>> =
     new Map();
@@ -34,6 +45,17 @@ export class AudioEngine {
       options?: ConstructorParameters<(typeof Tone)[T]>[0]
     ) => InstanceType<(typeof Tone)[T]>)();
     this.nodes.set(id, node);
+
+    // Route Channel nodes to speakers
+    if (type === "Channel") {
+      (node as Tone.Channel).toDestination();
+    }
+
+    // Auto-start continuous sources
+    if (CONTINUOUS_SOURCES.has(type)) {
+      (node as unknown as { start(): void }).start();
+    }
+
     return node;
   }
 
@@ -79,6 +101,51 @@ export class AudioEngine {
         );
       }
     }
+  }
+
+  /**
+   * Removes a node: disconnects all connections, disposes, and removes from maps
+   */
+  removeNode(id: string): void {
+    const node = this.nodes.get(id);
+    if (!node) return;
+
+    // Disconnect outgoing connections (this node as source)
+    const targets = this.connections.get(id);
+    if (targets) {
+      for (const targetId of targets) {
+        const target = this.nodes.get(targetId);
+        if (target) {
+          try {
+            node.disconnect(target);
+          } catch {
+            // Already disconnected
+          }
+        }
+      }
+      this.connections.delete(id);
+    }
+
+    // Disconnect incoming connections (this node as target)
+    for (const [sourceId, sourceTargets] of this.connections) {
+      if (sourceTargets.includes(id)) {
+        const source = this.nodes.get(sourceId);
+        if (source) {
+          try {
+            source.disconnect(node);
+          } catch {
+            // Already disconnected
+          }
+        }
+        this.connections.set(
+          sourceId,
+          sourceTargets.filter((t) => t !== id)
+        );
+      }
+    }
+
+    node.dispose();
+    this.nodes.delete(id);
   }
 
   /**

@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type TremoloNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function TremoloNode({ data, id }: NodeProps<TremoloNode>) {
-  const _tremolo = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Tremolo");
 
   return (

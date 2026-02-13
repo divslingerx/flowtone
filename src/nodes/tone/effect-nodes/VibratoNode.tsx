@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type VibratoNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function VibratoNode({ data, id }: NodeProps<VibratoNode>) {
-  const _vibrato = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Vibrato");
 
   return (

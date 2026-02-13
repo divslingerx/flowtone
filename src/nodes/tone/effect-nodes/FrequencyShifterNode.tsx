@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type FrequencyShifterNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function FrequencyShifterNode({ data, id }: NodeProps<FrequencyShifterNode>) {
-  const _freqShifter = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("FrequencyShifter");
 
   return (

@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type PhaserNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function PhaserNode({ data, id }: NodeProps<PhaserNode>) {
-  const _phaser = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Phaser");
 
   return (

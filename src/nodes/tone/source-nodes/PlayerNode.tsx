@@ -1,12 +1,10 @@
 import { type NodeProps } from "@xyflow/react";
 import { type PlayerNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function PlayerNode({ data, id }: NodeProps<PlayerNode>) {
-  const _player = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Player");
 
   return (

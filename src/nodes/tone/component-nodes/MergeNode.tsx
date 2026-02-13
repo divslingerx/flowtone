@@ -1,11 +1,9 @@
 import { type NodeProps } from "@xyflow/react";
 import { type MergeNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 
 export function MergeNode({ data, id }: NodeProps<MergeNode>) {
-  const _merge = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Merge");
 
   return (

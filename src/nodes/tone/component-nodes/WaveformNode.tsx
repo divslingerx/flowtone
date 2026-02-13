@@ -1,11 +1,9 @@
 import { type NodeProps } from "@xyflow/react";
 import { type WaveformNode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 
 export function WaveformNode({ data, id }: NodeProps<WaveformNode>) {
-  const _waveform = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("Waveform");
 
   return (

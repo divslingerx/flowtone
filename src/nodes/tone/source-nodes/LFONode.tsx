@@ -1,19 +1,11 @@
 import { type NodeProps } from "@xyflow/react";
 import { type LFONode } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
-import { useEffect } from "react";
 
 export function LFONode({ data, id }: NodeProps<LFONode>) {
-  const lfo = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode("LFO");
-
-  // Start the LFO
-  useEffect(() => {
-    lfo?.start();
-  }, [lfo]);
 
   return (
     <div className="react-flow__node-default">

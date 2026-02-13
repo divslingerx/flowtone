@@ -17,13 +17,11 @@
 
 import { type NodeProps } from "@xyflow/react";
 import { type NODE_TYPE } from "../../types";
-import { useToneNode } from "~/hooks/useToneNode";
 import { DynamicHandles } from "~/components/handles";
 import { getPortConfigForNode } from "~/ports/registry";
 import { AutoNodeControls } from "~/components/auto-controls";
 
 export function NODE_NAMENode({ data, id }: NodeProps<NODE_TYPE>) {
-  const node = useToneNode(data.type, data.config);
   const portConfig = getPortConfigForNode(TONE_TYPE);
 
   return (
